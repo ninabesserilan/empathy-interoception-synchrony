@@ -24,11 +24,11 @@ df_ch_selection_mom_9m_no_toys, ch_selection_dict_mom_9m_no_toys = channel_selec
 
 # # # ---- Insert missing peaks for best ibis channels and creat final dict with original and improved data---------------------------
 
-toys_infant_final_dict, toys_infant_df_new_ibis_stats, excluded_toys_infant = create_final_data_dict('infant',peaks_toys_9m_infants_data, ibis_toys_9m_infants_data, ch_selection_dict_infant_9m_toys,infant_ibis_th =600, mom_ibis_th = 1000, median_ibis_percantage_th = 0.80 )
-toys_mom_final_dict, toys_mom_df_new_ibis_stats, excluded_toys_mom = create_final_data_dict('mom',peaks_toys_9m_moms_data, ibis_toys_9m_moms_data, ch_selection_dict_mom_9m_toys,infant_ibis_th =600, mom_ibis_th = 1000, median_ibis_percantage_th = 0.80 )
+toys_infant_final_dict, toys_infant_df_new_ibis_stats, excluded_toys_infant = create_final_data_dict('infant',peaks_toys_9m_infants_data, ibis_toys_9m_infants_data, ch_selection_dict_infant_9m_toys,infant_ibis_th =600, mom_ibis_th = 1000, mean_ibis_percantage_th = 0.80 )
+toys_mom_final_dict, toys_mom_df_new_ibis_stats, excluded_toys_mom = create_final_data_dict('mom',peaks_toys_9m_moms_data, ibis_toys_9m_moms_data, ch_selection_dict_mom_9m_toys,infant_ibis_th =600, mom_ibis_th = 1000, mean_ibis_percantage_th = 0.80 )
 
-notoys_infant_final_dict, notoys_infant_df_new_ibis_stats, excluded_notoys_infant = create_final_data_dict('infant',peaks_no_toys_9m_infants_data, ibis_no_toys_9m_infants_data, ch_selection_dict_infant_9m_no_toys,infant_ibis_th =600, mom_ibis_th = 1000, median_ibis_percantage_th = 0.80 )
-notoys_mom_final_dict, notoys_mom_df_new_ibis_stats, excluded_notoys_mom = create_final_data_dict('mom',peaks_no_toys_9m_moms_data, ibis_no_toys_9m_moms_data, ch_selection_dict_mom_9m_no_toys,infant_ibis_th =600, mom_ibis_th = 1000, median_ibis_percantage_th = 0.80 )
+notoys_infant_final_dict, notoys_infant_df_new_ibis_stats, excluded_notoys_infant = create_final_data_dict('infant',peaks_no_toys_9m_infants_data, ibis_no_toys_9m_infants_data, ch_selection_dict_infant_9m_no_toys,infant_ibis_th =600, mom_ibis_th = 1000, mean_ibis_percantage_th = 0.80 )
+notoys_mom_final_dict, notoys_mom_df_new_ibis_stats, excluded_notoys_mom = create_final_data_dict('mom',peaks_no_toys_9m_moms_data, ibis_no_toys_9m_moms_data, ch_selection_dict_mom_9m_no_toys,infant_ibis_th =600, mom_ibis_th = 1000, mean_ibis_percantage_th = 0.80 )
 
 # # ---- save all data to a new pickle ---------------------------
 

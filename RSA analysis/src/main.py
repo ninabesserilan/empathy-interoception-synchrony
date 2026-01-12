@@ -1,27 +1,32 @@
-from sync import rsa_magnitude, rsa_per_epoch, rsa_time_series, epochs_synchrony, cross_correlation_zlc, multimodal_synchrony
-import numpy as np
 import pandas as pd
-import neurokit2 as nk
-import numpy as np
 from pathlib import Path
 import pickle
 
-from data_loader import data_dict
-from prepare_sample import prepare_sample_for_analysis
-from rsa_calculation import calculate_rsa, exclude_unmatched_pairs
-from excluded_subs_data import excluded_subs_data
-from ibis_interpolation import apply_gap_filling_to_data_dict
+from data_loader import data_loader
+from spline_interpolation import apply_gap_filling_to_data_dict
 
+from prepare_sample_to_rsa import prepare_sample_for_analysis
+from rsa_calculation import calculate_rsa
+
+from excluded_subs_data import excluded_subs_data
+
+
+ibis_pickle_path = Path('/Users/nina/Desktop/University of Vienna/PhD projects/python code/interoception-synchrony/Best ch pipeline/all data improved and original chs.pkl')
+
+data_dict = data_loader(ibis_pickle_path)
 
 parent_dir = Path(__file__).resolve().parent.parent
 
 is_interpolation = True
 
+
 if is_interpolation:
 
         interpolation_pickle_output_path = parent_dir / 'Improved best ch after interpolation.pkl'
 
-        intrpolat_ibi = apply_gap_filling_to_data_dict(data_dict, factor=2, infant_ibis_th =600, mom_ibis_th = 1000, save_path=interpolation_pickle_output_path)
+        intrpolat_ibi = apply_gap_filling_to_data_dict(data_dict, factor=2, infant_ibis_th=600, 
+                                   mom_ibis_th=1000, tension=0.2, save_path=interpolation_pickle_output_path)
+        
         
         sample_for_analyis = intrpolat_ibi
 else:
@@ -44,7 +49,6 @@ else:
 
 
 
-
 final_excluded_df_toys_infant,final_excluded_df_toys_mom, final_excluded_df_notoys_infant, final_excluded_df_notoys_mom = excluded_subs_data(excluded_subs, excluded_unmatched_subs, sample_for_analyis)
 pickle_path = parent_dir/rsa_pickle_name
 
@@ -52,7 +56,6 @@ with open(pickle_path, "wb") as f:
         pickle.dump(rsa_dict, f)
 
 print(f"All data saved to {pickle_path}")
-
 
 
 output_path_original = parent_dir / excluded_sub_name

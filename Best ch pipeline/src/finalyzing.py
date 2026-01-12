@@ -11,7 +11,7 @@ def create_final_data_dict(
     peaks_data_dict: dict,
     ibis_data_dict: dict,
     ch_selection_dict: dict,
-    infant_ibis_th =600, mom_ibis_th = 1000, median_ibis_percantage_th = 0.80
+    infant_ibis_th =600, mom_ibis_th = 1000, mean_ibis_percantage_th = 0.80
 ):
     """
     Create a unified dictionary with refined best channel data and original data.
@@ -22,13 +22,13 @@ def create_final_data_dict(
     refined_dict = {}
 
 
-    missing_peaks_dict, exclude_subs_dict = analyze_missing_peaks(participant, peaks_data_dict, ibis_data_dict, ch_selection_dict, median_ibis_percantage_th, refined_best_ch= True)
+    missing_peaks_dict, exclude_subs_dict = analyze_missing_peaks(participant, peaks_data_dict, ibis_data_dict, ch_selection_dict, mean_ibis_percantage_th, refined_best_ch= True)
     # 1.1 New peaks data
     new_best_ch_peaks_dict = fill_missing_peaks(
         participant,
         peaks_data_dict,
         ch_selection_dict,
-        missing_peaks_dict,median_ibis_percantage_th)
+        missing_peaks_dict,mean_ibis_percantage_th)
 
 
     refined_dict['new_peaks_data'] = new_best_ch_peaks_dict

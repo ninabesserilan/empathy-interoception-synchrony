@@ -12,6 +12,3 @@ def data_loader(pickle_path: Path):
 
 
 
-pickle_path = Path('/Users/nina/Desktop/University of Vienna/PhD projects/python code/interoception-synchrony/Best ch pipeline/all data improved and original chs.pkl')
-
-data_dict = data_loader(pickle_path)
