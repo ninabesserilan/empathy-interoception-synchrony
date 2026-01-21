@@ -1,4 +1,3 @@
-from sync import rsa_magnitude, rsa_per_epoch, rsa_time_series, time_series_synchrony, cross_correlation_zlc, multimodal_synchrony
 import numpy as np
 import pandas as pd
 import numpy as np
