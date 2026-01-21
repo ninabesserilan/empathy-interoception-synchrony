@@ -40,6 +40,11 @@ Config_03_jason_ibi_empathy_data = {
     
     'analysis_stage': '03_ibi_after_manual_coding',
 
+    'data_type': {
+        'ibis': 'ibis',
+        'peaks': 'peaks'},
+
+
     'example_for_file_names' : 
     {'9_month_name': 'empathy_006_empathyhammer_ECG2_channel2', 
     '18_month_name': '136_empathy_chair_ecg1_reunion_ch3_ecg'},
@@ -73,30 +78,33 @@ Config_01_csv_ibi_empathy_data = {
 
     'analysis_stage': '01_ibi_after_extraction',
 
-    'group': {'9_months': '9_emp'}, 
-        
-    'condition': {
+    'data_type': {
         'ibis': 'ibis',
         'peaks': 'peaks'},
 
-    'session type': {
+
+
+    'group': {'9_months': '9_emp'}, 
+        
+    'condition': {
         'hammer': 'hammer',
         'chair': ['chair', 'chiar', 'knee'],
         'not play': 'nplaying',
         'no book': 'nbook',
         'neutral': 'neutral'},
 
+    'session type': {
+        'distress': 'distress',
+        'freeplay': 'freeplay',
+        'reunion': 'reunion'},
 
-    'participant': { # NEW 13.10.25 - switch between infant and mom
-        'mom': 'ECG1',
-        'infant': 'ECG2',
-    },
-    'channel': {
-        'ch_0': 'channel0',
-        'ch_1': 'channel1',
-        'ch_2': 'channel2',
+    'participant': { 'mom': 'ecg1','infant': 'ecg2'}, # NEW 13.10.25 - switch between infant and mom
+
+    'channel': { 
+        'ch_0': ['ch1','_channel0'], 
+        'ch_1': ['ch2','_channel1'], 
+        'ch_2': ['ch3','_channel2']}
     }
-}
 
 
 

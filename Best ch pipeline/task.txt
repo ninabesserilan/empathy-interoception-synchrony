@@ -1,0 +1,1 @@
+Check the raw data > xdf files in the shared > wp_3 >raw ecg datamanuel inspection - open 1/2 files with good data from the infants, make sure if it's indeed 500 hz -to see if the peaksa are in 200 or 400 ~ IBIS

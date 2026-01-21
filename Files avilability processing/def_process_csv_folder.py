@@ -111,29 +111,3 @@ def process_csv_folder(folder_path, config, output_prefix, save_pickles=True, sa
 
     return data_dict
 
-
-def convert_rsa_strings_to_numeric(data_dict):
-    """
-    Convert all 'data' entries in a nested RSA data dictionary
-    from semicolon-separated strings to numeric DataFrames with
-    columns ['motherRsa', 'infantRsa'].
-    
-    Args:
-        data_dict (dict): Nested dictionary as in your raw pickle.
-        
-    Returns:
-        dict: Same structure, but 'data' is now a DataFrame with numeric columns.
-    """
-    for group, dyads in data_dict.items():
-        for dyad, conditions in dyads.items():
-            for cond, channels in conditions.items():
-                for ch, data_dict_ch in channels.items():
-                    series = data_dict_ch['data']
-                    # Skip header row if present
-                    if series.iloc[0].startswith("motherRsa;"):
-                        series = series.iloc[1:]
-                    df = series.str.split(';', expand=True)
-                    df.columns = ['motherRsa', 'infantRsa']
-                    df = df.apply(pd.to_numeric)
-                    data_dict_ch['data'] = df
-    return data_dict

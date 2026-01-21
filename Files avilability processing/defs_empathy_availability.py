@@ -11,12 +11,19 @@ def build_empathy_dict(folder:str, age_group:str, config:dict, with_all_indices:
     
     # Helper to get dyad id
     def get_dyad_id(filename, age_group):
-        if age_group == '9':
+
+        if age_group == '9_emp':
             parts = filename.split("_")
-            return parts[1][-2:]
+            return parts[2][-2:]
+        
         else:
-            parts = filename.split("_")
-            return parts[0][-2:] 
+
+            if age_group == '9':
+                parts = filename.split("_")
+                return parts[1][-2:]
+            else:
+                parts = filename.split("_")
+                return parts[0][-2:] 
     
     # Helper to get participant
     def get_participant(filename):
@@ -47,17 +54,20 @@ def build_empathy_dict(folder:str, age_group:str, config:dict, with_all_indices:
             if any(v in filename for v in values):
                 return key
 
+  
     def init_hierarchy(age_group):
         """Condition -> session type -> list of channels"""
         hierarchy = {}
         for cond in config['condition'].keys():
-            if age_group == '9':
-                hierarchy[cond] = []
-            else:
+            if age_group == '18':
                 hierarchy[cond] = {}
                 for sess in config['session type'].keys():
-                    hierarchy[cond][sess] = []                
+                    hierarchy[cond][sess] = []     
+            else:
+                hierarchy[cond] = []
+          
         return hierarchy
+
     
     def prune_empty_lists(dic):
         for key in list(dic.keys()):
@@ -79,8 +89,6 @@ def build_empathy_dict(folder:str, age_group:str, config:dict, with_all_indices:
 
     
     for file in os.listdir(folder):
-        if not file.endswith('.json'):
-            continue
         dyad_id = get_dyad_id(file, age_group)
         participant = get_participant(file)
         condition = get_condition(file)
@@ -88,17 +96,26 @@ def build_empathy_dict(folder:str, age_group:str, config:dict, with_all_indices:
         channel = get_channel(file)
 
         outer_key = f"{participant} {age_group} month empathy"
+        print(dyad_id)
+        print(participant)
+        print(condition)
+        print(session_type)
+        print(channel)
+        print(outer_key)
+
         
         if dyad_id not in outer_dict[outer_key]:
             outer_dict[outer_key][dyad_id] = init_hierarchy(age_group)
         
         # Append channel only if valid
-        if age_group == '9':
-            if channel not in outer_dict[outer_key][dyad_id][condition]:
-                outer_dict[outer_key][dyad_id][condition].append(channel)
-        else:
+        if age_group == '18':
             if channel not in outer_dict[outer_key][dyad_id][condition][session_type]:
                 outer_dict[outer_key][dyad_id][condition][session_type].append(channel)
+
+        else:
+            if channel not in outer_dict[outer_key][dyad_id][condition]:
+                outer_dict[outer_key][dyad_id][condition].append(channel)
+
             
     dic = prune_empty_lists(outer_dict)
 

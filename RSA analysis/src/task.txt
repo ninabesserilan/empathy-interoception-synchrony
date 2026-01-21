@@ -1,0 +1,7 @@
+RSA pipline
+
+1. The pipeline should read the pickle
+2. Based on the new ibib statistics, for each condition and participant, it should exclude participant that their session <  1 sec
+3. Based on the new ibib statistics, for each condition and participant, it should exclude participant that their long_ibis sum > ibis lenght
+4. calculate RSA for valid dyads
+5. Organize the data in RSA pairs, this structure: condition (toys/no toys) > validity (valid/invalid) > dyad id > subjec(infant/mom) > data/exclusion_reason
