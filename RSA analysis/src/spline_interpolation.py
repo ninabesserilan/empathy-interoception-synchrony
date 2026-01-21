@@ -141,7 +141,7 @@ def catmull_rom_spline(points, tension=0.0):
     return interpolate
 
 
-def ibis_interpolation_spline(ibi_arr, factor=2, tension=0.2):
+def ibis_interpolation_spline(ibi_arr, factor=2, tension=0.2): # Should we do factor = 1.5?
     """
     Interpolates IBIs using Catmull-Rom spline, matching the JS implementation.
     
@@ -243,6 +243,7 @@ def ibis_interpolation_spline(ibi_arr, factor=2, tension=0.2):
             scaled_values = [round(v * scale) for v in group_values]
         else:
             # Fallback: distribute duration equally
+            print("spline failed")
             scaled_values = [original_gap_duration / len(gap_indices)] * len(gap_indices)
         
         # Store as [index, value] pairs
