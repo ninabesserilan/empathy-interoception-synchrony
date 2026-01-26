@@ -10,7 +10,7 @@ from typing import Literal
 # -----------------------------
 
 def analyze_missing_peaks(participant: Literal['infant', 'mom'], peaks_data_dict: dict, ibis_data_dict: dict, ch_selection_dict: dict, 
-                          mean_ibis_percantage_th:float = 0.75, refined_best_ch:bool =True):
+                          median_ibis_percantage_th:float, refined_best_ch:bool =True):
     """
     Analyze missing peaks in the best IBI channel per subject compared to other channels.
 
@@ -48,13 +48,13 @@ def analyze_missing_peaks(participant: Literal['infant', 'mom'], peaks_data_dict
             exclude_subs[subj_id] = excluding_reason
             continue
 
-        missing_peaks = analyze_missing_peaks_intervals(ch_selection_dict[subj_id], sub_peak_data, mean_ibis_percantage_th, refined_best_ch)
+        missing_peaks = analyze_missing_peaks_intervals(ch_selection_dict[subj_id], sub_peak_data, median_ibis_percantage_th, refined_best_ch)
         
         report[subj_id] = missing_peaks
     
     return report, exclude_subs
 
-def analyze_missing_peaks_intervals(sub_ch_selection_dict: dict, peaks_channels: dict, mean_ibis_percantage_th: float, refined_best_ch: bool):
+def analyze_missing_peaks_intervals(sub_ch_selection_dict: dict, peaks_channels: dict, median_ibis_percantage_th: float, refined_best_ch: bool):
     """
     Identify missing peaks in other channels relative to the best channel.
 
@@ -77,8 +77,8 @@ def analyze_missing_peaks_intervals(sub_ch_selection_dict: dict, peaks_channels:
     best_peaks = np.array(peaks_channels[best_ch]['data'])
     best_ibis = np.diff(best_peaks)
 
-    mean_ibi = sub_ch_selection_dict['mean_best']
-    threshold = mean_ibi * mean_ibis_percantage_th
+    median_ibi = sub_ch_selection_dict['median_best']
+    threshold = median_ibi * median_ibis_percantage_th
 
     # Prepare dicts for medium & worst
 

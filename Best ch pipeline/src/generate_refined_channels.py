@@ -11,7 +11,7 @@ def fill_missing_peaks(
     peaks_data_dict: dict,
     ch_selection_dict: dict,
     missing_peaks_dict: dict,
-    mean_ibis_percantage_th:float
+    median_ibis_percantage_th:float
 ):
     new_best_ch_peaks = {'data': {}, 'source': {}}
 
@@ -19,9 +19,9 @@ def fill_missing_peaks(
         #  Access best channel correctly
         best_ch = ch_selection_dict[subj]['best_channel']
         best_peaks = peaks_data_dict[subj][participant][best_ch]['data']
-        best_ch_mean_ibis= ch_selection_dict[subj]['mean_best']
+        best_ch_medain_ibis= ch_selection_dict[subj]['median_best']
 
-        merge_tolerance_ms = best_ch_mean_ibis * mean_ibis_percantage_th
+        merge_tolerance_ms = best_ch_medain_ibis * median_ibis_percantage_th
 
         new_peaks = best_peaks.copy()
         new_sources = pd.Series([{ 'best': best_ch }] * len(new_peaks))

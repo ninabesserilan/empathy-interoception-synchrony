@@ -1,0 +1,16 @@
+{
+  "name": "js_curve_interpolator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "curve_interpolator.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "curve-interpolator": "^2.0.8"
+  }
+}

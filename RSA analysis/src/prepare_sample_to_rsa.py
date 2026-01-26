@@ -37,9 +37,10 @@ def prepare_sample_for_analysis(data: dict, min_session_length_sec, min_sdrr, is
                 
             )
 
-            # Filter out excluded subjects from data
+            # Filter out excluded subjects and extract only ibi_samples
             valid_subs_data = {
-                sub_id: data for sub_id, data in subs_data.items()
+                sub_id: data['ibi_samples']
+                for sub_id, data in subs_data.items()
                 if sub_id not in excluded_subs
             }
 
@@ -89,7 +90,7 @@ def exclude_invalid_subs(
                 if sub in excluded_subs:
                     continue
                 ibis_length_before_interpolation = len(subs_data_before_interpolation[sub])
-                ibis_lenght_with_interpolation = len(sub_data)
+                ibis_lenght_with_interpolation = len(sub_data['ibi_samples'])
                 interpolated_ibis_count = ibis_lenght_with_interpolation - ibis_length_before_interpolation
 
                 if interpolated_ibis_count >=missing_ibis_prop * ibis_lenght_with_interpolation:
