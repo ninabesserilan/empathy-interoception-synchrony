@@ -38,7 +38,7 @@ def interpolation_process(data_dict, sampling_rate, js_spline_lookup, infant_ibi
             # Process each subject
             for sub_id, peak_data in subs_data.items():
                 # Apply spline-based gap-filling
-                filled_result = process_ibi_data(sub_id, peak_data, js_spline_lookup, tension )
+                filled_result = process_ibi_data(sub_id, peak_data, sampling_rate, js_spline_lookup, tension )
                 ibis_after_interpolation_data[sub_id] = filled_result
 
                 # Compute statistics
@@ -47,26 +47,29 @@ def interpolation_process(data_dict, sampling_rate, js_spline_lookup, infant_ibi
                 else:
                     long_ibi_threshold = mom_ibis_th
 
-                # Compute statistics using ibi_sample
-                ibi_array = np.array(filled_result['ibi_samples'])
-                length_best = len(ibi_array)
-                median_best = np.median(ibi_array) if length_best > 0 else np.nan
-                mean_best = np.mean(ibi_array) if length_best > 0 else np.nan
-                sdrr_best = np.std(ibi_array, ddof=1) if length_best > 1 else np.nan
-                long_ibi_count_best = np.sum(ibi_array > long_ibi_threshold) if length_best > 0 else 0
+                # Compute statistics using ibi_ms
+                ibi_ms_array = np.array(filled_result['ibi_ms'])
+                ibi_sample_array = np.array(filled_result['ibi_samples'])
+                length_ibis = len(ibi_ms_array)
+                median_ibis = np.median(ibi_ms_array) if length_ibis > 0 else np.nan
+                mean_ibis = np.mean(ibi_ms_array) if length_ibis > 0 else np.nan
+                sdrr_ibis = np.std(ibi_ms_array, ddof=1) if length_ibis > 1 else np.nan
+                long_ibi_count = np.sum(ibi_sample_array > long_ibi_threshold) if length_ibis > 0 else 0
+
 
                 # Copy metadata
                 name_best = subs_stat[sub_id]['best_channel']
-                session_length_sec = subs_stat[sub_id]['session_lenght_sec']  # keeping original key
+                session_length = subs_stat[sub_id]['session_lenght_sec']  
+                session_length_sec = session_length * (1000/sampling_rate)
 
                 ibis_after_interpolation_stats[sub_id] = {
                     'best_channel': name_best,
                     'session_lenght_sec': session_length_sec,
-                    'length_ibis_ts': length_best,
-                    'median': median_best,
-                    'mean': mean_best,
-                    'sdrr': sdrr_best,
-                    'long_ibi_count': long_ibi_count_best
+                    'length_ibis_ts': length_ibis,
+                    'median': median_ibis,
+                    'mean': mean_ibis,
+                    'sdrr': sdrr_ibis,
+                    'long_ibi_count': long_ibi_count
                 }
 
             # Attach results back
@@ -83,7 +86,7 @@ def interpolation_process(data_dict, sampling_rate, js_spline_lookup, infant_ibi
     return processed
 
 
-def process_ibi_data(sub_id, data, js_spline_lookup, tension=0.2):
+def process_ibi_data(sub_id, data, sampling_rate, js_spline_lookup, tension=0.2):
     """
     Process inter-beat interval (IBI) data with interpolation for removed regions.
     
@@ -100,6 +103,7 @@ def process_ibi_data(sub_id, data, js_spline_lookup, tension=0.2):
     Returns:
         Dictionary containing:
             - ibi_samples: List of IBI values in samples
+             - ibi_ms: List of IBIs in milliseconds
             - interpolated_indices: List of indices that were interpolated
     """
     # Sort peaks and create a copy
@@ -137,6 +141,7 @@ def process_ibi_data(sub_id, data, js_spline_lookup, tension=0.2):
     if len(ibi_located) == 0:
         return {
             'ibi_samples': [],
+            'ibi_ms': [],
             'interpolated_indices': []
         }
     
@@ -196,8 +201,11 @@ def process_ibi_data(sub_id, data, js_spline_lookup, tension=0.2):
     # Handle edge case: no interpolation needed
     if len(interpolation_indices) == 0:
         ibi_samples = [el[1] for el in ibi_indexed]
+        ibi_ms = [int(s / sampling_rate * 1000) for s in ibi_samples]
+
         return {
             'ibi_samples': ibi_samples,
+            'ibi_ms' : ibi_ms,
             'interpolated_indices': []
         }
     
@@ -248,15 +256,13 @@ def process_ibi_data(sub_id, data, js_spline_lookup, tension=0.2):
         key=lambda x: x[0]
     )
     # Create output data
-    ibi_samples = [el[1] for el in ibi_merged]
-    interpolated_indices_out = [el[0] for el in ibi_interpolated]
-
-    if sub_id == '43':
-        print(f"First removed region: {removed_regions[0]}")
-        print(f"First real IBI in ibi_located: {ibi_located[0] if len(ibi_located) > 0 else 'NONE'}")
+    ibi_samples = [x[1] for x in ibi_merged]
+    ibi_ms = [int(s / sampling_rate * 1000) for s in ibi_samples]
+    interpolated_indices_out = [x[0] for x in ibi_interpolated]
 
     
     return {
         'ibi_samples': ibi_samples,
+        'ibi_ms': ibi_ms,
         'interpolated_indices': interpolated_indices_out
     }
