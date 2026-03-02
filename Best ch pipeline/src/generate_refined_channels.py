@@ -18,8 +18,9 @@ def fill_missing_peaks(
     for subj, missing_data in missing_peaks_dict.items():
         #  Access best channel correctly
         best_ch = ch_selection_dict[subj]['best_channel']
-        best_peaks = peaks_data_dict[subj][participant][best_ch]['data']
+        best_peaks = pd.Series(peaks_data_dict[subj][participant][best_ch]['data'], dtype= int)
         best_ch_medain_ibis= ch_selection_dict[subj]['median_best']
+
 
         merge_tolerance_ms = best_ch_medain_ibis * median_ibis_percantage_th
 
@@ -42,7 +43,7 @@ def fill_missing_peaks(
                 # --- Add merged peaks ---
                 for p, ch_type, ch_name in merged_candidates:
                     # Only add the peak if it’s not already in new_peaks
-                    if p not in new_peaks.values:
+                    if p not in new_peaks:
                         # Append the peak time to new_peaks
                         new_peaks = pd.concat([new_peaks, pd.Series([p])], ignore_index=True)
                         # Append a dict recording the source (channel type & name) to new_sources
@@ -54,13 +55,13 @@ def fill_missing_peaks(
 
         # --- Sort peaks and reorder sources to match chronological order ---
         # Get the indices that would sort new_peaks by time
-        sorted_idx = np.argsort(new_peaks.values)
+        sorted_idx = np.argsort(new_peaks)
 
         # Reorder new_peaks and store in results for this subject
-        new_best_ch_peaks['data'][subj] = new_peaks.iloc[sorted_idx].reset_index(drop=True)
+        new_best_ch_peaks['data'][subj] = new_peaks[sorted_idx].reset_index(drop=True)
 
         # Reorder the corresponding sources so they stay aligned with the peaks
-        new_best_ch_peaks['source'][subj] = new_sources.iloc[sorted_idx].reset_index(drop=True)
+        new_best_ch_peaks['source'][subj] = new_sources[sorted_idx].reset_index(drop=True)
 
     return new_best_ch_peaks
 

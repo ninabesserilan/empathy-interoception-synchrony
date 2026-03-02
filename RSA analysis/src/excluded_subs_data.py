@@ -1,67 +1,40 @@
-
 import pandas as pd
-
-
 
 def excluded_subs_data(excluded_subs: dict, unmatched_subs: dict, data_dict: dict):
     """
-    Merge original excluded subjects with excluded_subs + unmatched_subs,
-    and return 4 separate DataFrames:
-    - toys_df_infant
-    - toys_df_mom
-    - no_toys_df_infant
-    - no_toys_df_mom
-
-    Index: sub_id
-    Columns: participant, reason
+    Merge original excluded subjects with excluded_subs + unmatched_subs.
+    Returns a nested dict: merged[participant][condition][task] -> DataFrame
     """
 
-    # Get original excluded from data_dict
-    original_excluded_infants_toys = data_dict['toys']['infant']['refined_best_channel_data']['excluded_subs']
-    original_excluded_moms_toys = data_dict['toys']['mom']['refined_best_channel_data']['excluded_subs']
-    original_excluded_infants_notoys = data_dict['no_toys']['infant']['refined_best_channel_data']['excluded_subs']
-    original_excluded_moms_notoys = data_dict['no_toys']['mom']['refined_best_channel_data']['excluded_subs']
+    def dict_to_df(sub_dict):
+        num_subs = len(sub_dict)
+        col_name = f"sub_id ({num_subs} subs)"
+        rows = [{'sub_id': sub_id, "reason": reason} for sub_id, reason in sub_dict.items()]
+        df = pd.DataFrame(rows).set_index('sub_id')
+        df.index.name = col_name
+        return df
 
     merged = {}
 
-    for condition, roles in excluded_subs.items():
-        merged[condition] = {}
+    for participant, part_data in excluded_subs.items():
+        merged[participant] = {}
 
-        # Merge original excluded with new excluded_subs
-        if condition == 'toys':
-            infant_dict = {**original_excluded_infants_toys, **roles.get('infant', {})}
-            mom_dict = {**original_excluded_moms_toys, **roles.get('mom', {})}
-        else:  # no_toys
-            infant_dict = {**original_excluded_infants_notoys, **roles.get('infant', {})}
-            mom_dict = {**original_excluded_moms_notoys, **roles.get('mom', {})}
+        for condition, cond_data in part_data.items():
+            merged[participant][condition] = {}
 
-        unmatched_list = unmatched_subs.get(condition, {}).get('unmatched_subjects', [])
+            for task, task_excluded in cond_data.items():
+                # Get original excluded from data_dict
+                original_excluded = data_dict[participant][condition][task]['excluded_subs']
 
-        # Add unmatched subjects safely
-        for sub_id in unmatched_list:
-            if sub_id not in infant_dict:
-                infant_dict[sub_id] = "Unmatched subject"
-            if sub_id not in mom_dict:
-                mom_dict[sub_id] = "Unmatched subject"
+                # Merge original + pipeline excluded
+                combined = {**original_excluded, **task_excluded}
 
-        merged[condition]['infant'] = infant_dict
-        merged[condition]['mom'] = mom_dict
+                # Add unmatched subjects
+                unmatched_list = unmatched_subs.get(condition, {}).get(task, {}).get('unmatched_subjects', [])
+                for sub_id in unmatched_list:
+                    if sub_id not in combined:
+                        combined[sub_id] = "Unmatched subject"
 
-    # Convert each merged dict to separate DataFrames
-    def dict_to_df(sub_dict):
-        num_subs = len(sub_dict)
-        col_name = f"sub_id ({num_subs} subs)"  # dynamic column name
-        rows = []
+                merged[participant][condition][task] = dict_to_df(combined)
 
-        for sub_id, reason in sub_dict.items():
-            rows.append({col_name: sub_id, "reason": reason})
-
-        df = pd.DataFrame(rows).set_index(col_name)
-        return df
-
-    toys_df_infant = dict_to_df(merged['toys']['infant'])
-    toys_df_mom = dict_to_df(merged['toys']['mom'])
-    no_toys_df_infant = dict_to_df(merged['no_toys']['infant'])
-    no_toys_df_mom = dict_to_df(merged['no_toys']['mom'])
-
-    return toys_df_infant, toys_df_mom, no_toys_df_infant, no_toys_df_mom
+    return merged

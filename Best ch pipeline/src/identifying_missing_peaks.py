@@ -1,6 +1,4 @@
 import numpy as np
-from metrics import compute_metrics
-from channel_selection import channel_selection
 from typing import Literal
 
 
@@ -9,7 +7,7 @@ from typing import Literal
 # Analyze missing peaks of the best ibis ch
 # -----------------------------
 
-def analyze_missing_peaks(participant: Literal['infant', 'mom'], peaks_data_dict: dict, ibis_data_dict: dict, ch_selection_dict: dict, 
+def analyze_missing_peaks(participant: Literal['infant', 'mom'], peaks_data_dict, ibis_sub_data, ch_selection_dict: dict, 
                           median_ibis_percantage_th:float, refined_best_ch:bool =True):
     """
     Analyze missing peaks in the best IBI channel per subject compared to other channels.
@@ -20,11 +18,11 @@ def analyze_missing_peaks(participant: Literal['infant', 'mom'], peaks_data_dict
     exclude_subs = {}
     report = {}
     
-    for subj_id, ibis_subj_data in ibis_data_dict.items():
+    for subj_id, sub_data in ibis_sub_data.items():
         sub_peak_data = (peaks_data_dict[subj_id]).get(participant, {})
-        sub_ibi_data = ibis_subj_data.get(participant, {})
+        sub_ibi_data = (ibis_sub_data[subj_id]).get(participant, {})
 
-        best_ch = ch_selection_dict.get(subj_id, {}).get('best_channel')
+        best_ch = ch_selection_dict[subj_id]['best_channel']
         if not best_ch:
             print(f"No best_channel for {subj_id}, skipping.")
             continue
@@ -33,7 +31,7 @@ def analyze_missing_peaks(participant: Literal['infant', 'mom'], peaks_data_dict
         best_ch_peak_data = sub_peak_data.get(best_ch, {}).get('data', [])
 
 
-        if best_ch_peak_data is None:
+        if best_ch_peak_data is None or  len(best_ch_peak_data)<2:
             excluding_reason = f"No peak data for best channel {best_ch}"
             print(f"Warning: {excluding_reason}")
             exclude_subs[subj_id] = excluding_reason
@@ -48,13 +46,13 @@ def analyze_missing_peaks(participant: Literal['infant', 'mom'], peaks_data_dict
             exclude_subs[subj_id] = excluding_reason
             continue
 
-        missing_peaks = analyze_missing_peaks_intervals(ch_selection_dict[subj_id], sub_peak_data, median_ibis_percantage_th, refined_best_ch)
+        missing_peaks = analyze_missing_peaks_intervals(ch_selection_dict[subj_id], subj_id, sub_peak_data, median_ibis_percantage_th, refined_best_ch)
         
         report[subj_id] = missing_peaks
     
     return report, exclude_subs
 
-def analyze_missing_peaks_intervals(sub_ch_selection_dict: dict, peaks_channels: dict, median_ibis_percantage_th: float, refined_best_ch: bool):
+def analyze_missing_peaks_intervals(sub_ch_selection_dict: dict, subj_id, peaks_channels: dict, median_ibis_percantage_th: float, refined_best_ch: bool):
     """
     Identify missing peaks in other channels relative to the best channel.
 
@@ -75,6 +73,14 @@ def analyze_missing_peaks_intervals(sub_ch_selection_dict: dict, peaks_channels:
     missing_peaks_report = {}
 
     best_peaks = np.array(peaks_channels[best_ch]['data'])
+
+    if len(best_peaks) == 0:
+        print(f"DEBUG: best_peaks is empty for {subj_id}!")
+        print(f"  best_ch: {best_ch}")
+        print(f"  peaks_channels keys: {list(peaks_channels.keys())}")
+        print(f"  peaks_channels[best_ch]: {peaks_channels.get(best_ch)}")
+        return {}
+
     best_ibis = np.diff(best_peaks)
 
     median_ibi = sub_ch_selection_dict['median_best']
@@ -88,6 +94,7 @@ def analyze_missing_peaks_intervals(sub_ch_selection_dict: dict, peaks_channels:
 }
 
     # --- Peaks before the first peak ---
+
     start_time = best_peaks[0]
     for ch_type, ch_dict in other_channels.items():
         for ch_name, ch_peaks in ch_dict.items():
@@ -160,3 +167,5 @@ def analyze_missing_peaks_intervals(sub_ch_selection_dict: dict, peaks_channels:
             }
 
     return missing_peaks_report
+
+

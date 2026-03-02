@@ -7,48 +7,49 @@ def prepare_sample_for_analysis(data: dict, min_session_length_sec, min_sdrr, is
     sample_for_calculation = {}
     excluded_summary = {}
 
-    
 
-    for condition, condition_dict in data.items():
-        sample_for_calculation[condition] = {}
-        excluded_summary[condition] = {}
+    for participant, participant_dict in data.items():
+        sample_for_calculation[participant] = {}
+        excluded_summary[participant] = {}
 
+        for condition, condition_dict in participant_dict.items():
+            sample_for_calculation[participant][condition] = {}
+            excluded_summary[participant][condition] = {}
 
-        for participant, part_data in condition_dict.items():    
-            refined = part_data['refined_best_channel_data']
+            for task, part_data in condition_dict.items():
 
-            if is_interpolation:
-                subs_stat = refined['ibis_after_interpolation']['stats']
-                subs_data = refined['ibis_after_interpolation']['data']
-                subs_data_before_interpolation = refined['new_ibis_data']['data']
-            else:
-                subs_stat = refined['new_ibis_stats']
-                subs_data = refined['new_ibis_data']['data']
-                subs_data_before_interpolation = subs_data
+                if is_interpolation:
+                    subs_stat = part_data['ibis_after_interpolation']['stats']
+                    subs_data = part_data['ibis_after_interpolation']['data']
+                    subs_data_before_interpolation = part_data['new_ibis_data']['data']
+                else:
+                    subs_stat = part_data['new_ibis_stats']
+                    subs_data = part_data['new_ibis_data']['data']
+                    subs_data_before_interpolation = subs_data
 
-            # Exclude invalid subjects
-            excluded_subs = exclude_invalid_subs(subs_data,
-                subs_data_before_interpolation, 
-                subs_stat,
-                missing_ibis_prop,
-                is_interpolation,
-                min_session_length_sec,
-                min_sdrr
-                
-            )
+                # Exclude invalid subjects
+                excluded_subs = exclude_invalid_subs(subs_data,
+                    subs_data_before_interpolation, 
+                    subs_stat,
+                    missing_ibis_prop,
+                    is_interpolation,
+                    min_session_length_sec,
+                    min_sdrr
+                    
+                )
 
-            # Filter out excluded subjects and extract only ibi_samples
-            valid_subs_data = {
-                sub_id: data['ibi_ms']
-                for sub_id, data in subs_data.items()
-                if sub_id not in excluded_subs
-            }
+                # Filter out excluded subjects and extract only ibi_samples
+                valid_subs_data = {
+                    sub_id: data['ibi_ms']
+                    for sub_id, data in subs_data.items()
+                    if sub_id not in excluded_subs
+                }
 
-            # Store valid data for further analysis
-            sample_for_calculation[condition][participant] = valid_subs_data
+                # Store valid data for further analysis
+                sample_for_calculation[participant][condition][task] = valid_subs_data
 
-            # Keep track of excluded ones
-            excluded_summary[condition][participant] = excluded_subs
+                # Keep track of excluded ones
+                excluded_summary[participant][condition][task] = excluded_subs
 
     return sample_for_calculation, excluded_summary
 
@@ -69,7 +70,7 @@ def exclude_invalid_subs(
 
     # -------- Session length exclusion --------
     if min_session_length_sec is None:
-        mean_session_length = np.mean([v['session_lenght_sec'] for v in subs_stat.values()])
+        mean_session_length = np.mean([v['session_length_sec'] for v in subs_stat.values()])
         min_session_length = 0.50 * mean_session_length
         min_length_criteria = f"half the mean length ({min_session_length:.2f}s)"
     else:
@@ -77,12 +78,23 @@ def exclude_invalid_subs(
         min_length_criteria = f'{min_session_length_sec} sec'
 
     for sub, stat_data in subs_stat.items():
-        if stat_data['session_lenght_sec'] < min_session_length:
+        if stat_data['session_length_sec'] < min_session_length:
             reason = (
-                f"Session length ({stat_data['session_lenght_sec']:.2f}s) is shorter "
+                f"Session length ({stat_data['session_length_sec']:.2f}s) is shorter "
                 f"than {min_length_criteria}"
             )
             excluded_subs[sub] = reason
+
+
+        # -------- Minimum IBI length exclusion --------
+    for sub, sub_data in subs_data.items():
+        if sub in excluded_subs:
+            continue
+        ibi_length = len(sub_data['ibi_ms']) if is_interpolation else len(subs_data[sub])
+        if ibi_length < 10:
+            reason = f"IBI series too short for RSA calculation ({ibi_length} samples, minimum 60)"
+            excluded_subs[sub] = reason
+
     
     # -------- Missing IBI exclusion --------
         if is_interpolation:

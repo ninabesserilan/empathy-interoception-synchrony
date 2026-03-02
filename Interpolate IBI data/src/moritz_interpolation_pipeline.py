@@ -25,59 +25,64 @@ def interpolation_process(data_dict, sampling_rate, js_spline_lookup, infant_ibi
     """
     processed = copy.deepcopy(data_dict)
 
-    for condition, condition_dict in processed.items():
-        for participant, part_data in condition_dict.items():
-            # Get source data
-            subs_stat = part_data['refined_best_channel_data']['new_ibis_stats'] 
-            subs_data = part_data['refined_best_channel_data']['data_for_interpolation']
 
-            # Containers for transformed IBIs and their stats
-            ibis_after_interpolation_data = {}
-            ibis_after_interpolation_stats = {}
+    for participant, participant_dict in processed.items():
 
-            # Process each subject
-            for sub_id, peak_data in subs_data.items():
-                # Apply spline-based gap-filling
-                filled_result = process_ibi_data(sub_id, peak_data, sampling_rate, js_spline_lookup, tension )
-                ibis_after_interpolation_data[sub_id] = filled_result
+        for condition, condition_dict in participant_dict.items():
+                
+            for task, part_data in condition_dict.items():
 
-                # Compute statistics
-                if participant == 'infant':
-                    long_ibi_threshold = infant_ibis_th
-                else:
-                    long_ibi_threshold = mom_ibis_th
+                # Get source data
+                subs_stat = part_data['new_ibis_stats'] 
+                subs_data = part_data['data_for_interpolation']
 
-                # Compute statistics using ibi_ms
-                ibi_ms_array = np.array(filled_result['ibi_ms'])
-                ibi_sample_array = np.array(filled_result['ibi_samples'])
-                length_ibis = len(ibi_ms_array)
-                median_ibis = np.median(ibi_ms_array) if length_ibis > 0 else np.nan
-                mean_ibis = np.mean(ibi_ms_array) if length_ibis > 0 else np.nan
-                sdrr_ibis = np.std(ibi_ms_array, ddof=1) if length_ibis > 1 else np.nan
-                long_ibi_count = np.sum(ibi_sample_array > long_ibi_threshold) if length_ibis > 0 else 0
+                # Containers for transformed IBIs and their stats
+                ibis_after_interpolation_data = {}
+                ibis_after_interpolation_stats = {}
+
+                # Process each subject
+                for sub_id, peak_data in subs_data.items():
+                    # Apply spline-based gap-filling
+                    filled_result = process_ibi_data(sub_id, peak_data, sampling_rate, js_spline_lookup, tension )
+                    ibis_after_interpolation_data[sub_id] = filled_result
+
+                    # Compute statistics
+                    if participant == 'infant':
+                        long_ibi_threshold = infant_ibis_th
+                    else:
+                        long_ibi_threshold = mom_ibis_th
+
+                    # Compute statistics using ibi_ms
+                    ibi_ms_array = np.array(filled_result['ibi_ms'])
+                    ibi_sample_array = np.array(filled_result['ibi_samples'])
+                    length_ibis = len(ibi_ms_array)
+                    median_ibis = np.median(ibi_ms_array) if length_ibis > 0 else np.nan
+                    mean_ibis = np.mean(ibi_ms_array) if length_ibis > 0 else np.nan
+                    sdrr_ibis = np.std(ibi_ms_array, ddof=1) if length_ibis > 1 else np.nan
+                    long_ibi_count = np.sum(ibi_sample_array > long_ibi_threshold) if length_ibis > 0 else 0
 
 
-                # Copy metadata
-                name_best = subs_stat[sub_id]['best_channel']
-                session_length = subs_stat[sub_id]['session_lenght_sec']  
-                session_length_sec = session_length * (1000/sampling_rate)
+                    # Copy metadata
+                    name_best = subs_stat[sub_id]['best_channel']
+                    session_length = subs_stat[sub_id]['session_length_sec']  
+                    session_length_sec = session_length * (1000/sampling_rate)
 
-                ibis_after_interpolation_stats[sub_id] = {
-                    'best_channel': name_best,
-                    'session_lenght_sec': session_length_sec,
-                    'length_ibis_ts': length_ibis,
-                    'median': median_ibis,
-                    'mean': mean_ibis,
-                    'sdrr': sdrr_ibis,
-                    'long_ibi_count': long_ibi_count
+                    ibis_after_interpolation_stats[sub_id] = {
+                        'best_channel': name_best,
+                        'session_length_sec': session_length_sec,
+                        'length_ibis_ts': length_ibis,
+                        'median': median_ibis,
+                        'mean': mean_ibis,
+                        'sdrr': sdrr_ibis,
+                        'long_ibi_count': long_ibi_count
+                    }
+
+                # Attach results back
+                part_data['ibis_after_interpolation'] = {
+                    'data': ibis_after_interpolation_data,
+                    'stats': ibis_after_interpolation_stats
                 }
-
-            # Attach results back
-            part_data['refined_best_channel_data']['ibis_after_interpolation'] = {
-                'data': ibis_after_interpolation_data,
-                'stats': ibis_after_interpolation_stats
-            }
-    
+        
     # Save as pickle if requested
     if save_path is not None:
         with open(save_path, "wb") as f:
