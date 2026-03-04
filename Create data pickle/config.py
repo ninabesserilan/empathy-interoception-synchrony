@@ -4,6 +4,8 @@ Config_03_json_empathy_9 = {
  
  'save_path': '/Users/nina/Desktop/University of Vienna/PhD projects/python code/Empathy-interoception-synchrony/Files data',
 
+ 'json_save_path':'/Users/nina/Desktop/University of Vienna/PhD projects/Interoception and physiological synchrony/Empathy data',
+
  'json_prefix': '03_json_after_manual_coding_9_month',
 
  'peaks_prefix': '03_peaks_after_manual_coding_9_month',
@@ -27,18 +29,21 @@ Config_03_json_empathy_9 = {
 Config_03_json_empathy_18 = { 
 
 'folder_path': '/Users/nina/Desktop/University of Vienna/PhD projects/Interoception and physiological synchrony/Empathy data/03_ibi_after_manual_coding_should_be_json/dashboardInputData_emp18 - jason', 
+
 'save_path': '/Users/nina/Desktop/University of Vienna/PhD projects/python code/Empathy-interoception-synchrony/Files data',
-
- 'json_prefix': '03_json_after_manual_coding_18_month',
-
- 'peaks_prefix': '03_peaks_after_manual_coding_18_month',
  
- 'participant': { 'mom': 
+'json_save_path':'/Users/nina/Desktop/University of Vienna/PhD projects/Interoception and physiological synchrony/Empathy data',
+
+'json_prefix': '03_json_after_manual_coding_18_month',
+
+'peaks_prefix': '03_peaks_after_manual_coding_18_month',
+ 
+'participant': { 'mom': 
                  ['ecg1', 'ECG1'],
                  'infant': ['ecg2', 'ECG2']},
  
     
- 'condition': { 
+'condition': { 
     'hammer': ['hammer','empathyhammer'], 
     'chair': ['chair','chiar', 'empathychair', 'empathyknee' ]},
 
@@ -48,7 +53,7 @@ Config_03_json_empathy_18 = {
     'reunion': 'reunion'},
 
 
- 'channel': { 
+'channel': { 
      'ch_0': ['ch1','_channel0'], 
      'ch_1': ['ch2','_channel1'], 
      'ch_2': ['ch3','_channel2']}

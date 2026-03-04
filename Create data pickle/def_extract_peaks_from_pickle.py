@@ -54,10 +54,10 @@ def filter_and_save_pickle(config):
             return new_dict
 
 
-    folder_path = Path(config['save_path'])
+    json_path = Path(config['json_save_path'])
 
     json_prefix = config['json_prefix']
-    path = folder_path / f"{json_prefix}.pkl"
+    path = json_path / f"{json_prefix}.pkl"
 
     with open(path, "rb") as f_ibis:
         data = pickle.load(f_ibis)
@@ -65,8 +65,9 @@ def filter_and_save_pickle(config):
     filtered_data = recursive_filter(data)
 
     # Save to pickle
+    save_path = Path(config['save_path'])
     save_prefix = config['peaks_prefix']
-    output_filename = folder_path /f"{save_prefix}.pkl"
+    output_filename = save_path /f"{save_prefix}.pkl"
 
     with open(output_filename, 'wb') as f:
         pickle.dump(filtered_data, f)

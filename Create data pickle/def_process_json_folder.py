@@ -98,7 +98,7 @@ def process_json_folder(config, save_pickles=True):
         raise ValueError(f"{skipped_files} files were skipped. Pickle not saved.")
         # Save pickles
     if save_pickles:
-        save_path = Path(config['save_path'])
+        save_path = Path(config['json_save_path'])
         output_prefix = config['json_prefix']
         full_pickle = save_path / f"{output_prefix}.pkl"
         with open(full_pickle, "wb") as pickle_file:
