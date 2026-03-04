@@ -205,3 +205,8 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+.DS_Store
+
+# Files data/03_json_after_manual_coding_18_month.pkl
+# Files data/03_json_after_manual_coding_9_month.pkl

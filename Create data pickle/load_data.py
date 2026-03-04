@@ -3,16 +3,90 @@ import pandas as pd
 
 
 
-pickle_path_9m = '/Users/nina/Desktop/University of Vienna/PhD projects/python code/empathy-interoception-synchrony/Files data/03_json_after_manual_coding_9_month.pkl'
+pickle_path_9m = '/Users/nina/Desktop/University of Vienna/PhD projects/python code/empathy-interoception-synchrony/Files data/03_peaks_after_manual_coding_9_month.pkl'
 
 with open(pickle_path_9m, "rb") as f_ibis:
     data_9 = pickle.load(f_ibis)
 
 
-pickle_path_18m = '/Users/nina/Desktop/University of Vienna/PhD projects/python code/empathy-interoception-synchrony/Files data/03_json_after_manual_coding_18_month.pkl'
 
-with open(pickle_path_18m, "rb") as f_ibis:
-    data_18 = pickle.load(f_ibis)
+
+def check_peaks_increasing(data):
+    """
+    Checks if 'peaks' lists are strictly increasing for every
+    participant ('infant'/'mom') > condition > subject > channel combination.
+    Reports any that are NOT strictly increasing.
+    """
+    participants = ['infant', 'mom']
+    non_increasing = []
+
+    for participant in participants:
+        if participant not in data:
+            print(f"⚠️  Participant group '{participant}' not found in data, skipping.")
+            continue
+
+        for condition, subjects in data[participant].items():
+            for subject, channels in subjects.items():
+                for channel, channel_data in channels.items():
+                    peaks = channel_data.get('peaks', None)
+
+                    if peaks is None or len(peaks) < 2:
+                        continue  # skip if no peaks or only one value
+
+                    # Flag if ANY decrease exists
+                    is_increasing = all(
+                        peaks[i] < peaks[i + 1] for i in range(len(peaks) - 1)
+                    )
+
+                    if not is_increasing:
+                        # Find exactly where the decrease(s) happen
+                        drops = [
+                            f"{peaks[i]} → {peaks[i+1]}"
+                            for i in range(len(peaks) - 1)
+                            if peaks[i] >= peaks[i + 1]
+                        ]
+                        non_increasing.append({
+                            'participant': participant,
+                            'condition':   condition,
+                            'subject':     subject,
+                            'channel':     channel,
+                            'peaks':       peaks,
+                            'drops_at':    ', '.join(drops)
+                        })
+
+    # --- Console output ---
+    if not non_increasing:
+        print("✅ All peaks are strictly increasing across all subjects/channels.")
+    else:
+        print(f"⚠️  Found {len(non_increasing)} case(s) where peaks are NOT strictly increasing:\n")
+        for entry in non_increasing:
+            print(
+                f"  Participant : {entry['participant']}\n"
+                f"  Condition   : {entry['condition']}\n"
+                f"  Subject     : {entry['subject']}\n"
+                f"  Channel     : {entry['channel']}\n"
+                f"  Peaks       : {entry['peaks']}\n"
+                f"  Drops at    : {entry['drops_at']}\n"
+                f"  {'-'*40}"
+            )
+
+    # --- CSV output ---
+    df = pd.DataFrame(non_increasing)
+    output_path = "non_increasing_peaks.csv"
+    df.to_csv(output_path, index=False)
+    print(f"\n💾 Results saved to '{output_path}'")
+
+    return df
+
+
+# --- Run it ---
+flagged_df = check_peaks_increasing(data_9)
+
+
+# pickle_path_18m = '/Users/nina/Desktop/University of Vienna/PhD projects/python code/empathy-interoception-synchrony/Files data/03_json_after_manual_coding_18_month.pkl'
+
+# with open(pickle_path_18m, "rb") as f_ibis:
+#     data_18 = pickle.load(f_ibis)
 
 
 
@@ -49,7 +123,7 @@ with open(pickle_path_18m, "rb") as f_ibis:
 # data_18_mom_reunion_hammer = data_18['mom']['hammer']['reunion']
 
 
-# # Print availability
+# Print availability
 # print('9 MONTHS:\n')
 
 # print(f"Chair: {len(set(data_9_mom_chair.keys()) & set(data_9_infant_chair.keys()))} dyads\n")
