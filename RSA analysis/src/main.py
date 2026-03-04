@@ -16,7 +16,7 @@ import numpy as np
 
 
 
-dic_for_rsa = Path('/Users/nina/Desktop/University of Vienna/PhD projects/python code/interoception-synchrony/Interpolate IBI data/after interpolation_Moritz.pkl')
+dic_for_rsa = Path('/Users/nina/Desktop/University of Vienna/PhD projects/python code/empathy-interoception-synchrony/Interpolate IBI data/after interpolation_Moritz.pkl')
 
 parent_dir = Path(__file__).resolve().parent.parent
 
@@ -28,30 +28,20 @@ valid_sample, excluded_subs = prepare_sample_for_analysis(data_dict, min_session
 
 rsa_dict, excluded_unmatched_subs = calculate_rsa(valid_sample, require_partner= True, ibi_value_th = 70000)
 
-toys_dyad_num = len(rsa_dict['toys'].keys())      
-notoys_dyad_num = len(rsa_dict['no_toys'].keys()) 
-
-# Building united excluded subs data frame
-
-rsa_pickle_name = 'rsa_pickle.pkl'
-excluded_sub_name = "All excluded subs after rsa.xlsx"
-
-
-final_excluded_df_toys_infant,final_excluded_df_toys_mom, final_excluded_df_notoys_infant, final_excluded_df_notoys_mom = excluded_subs_data(excluded_subs, excluded_unmatched_subs, data_dict)
-pickle_path = parent_dir/rsa_pickle_name
-
+# ---- RSA pickle ----
+pickle_path = parent_dir / 'rsa_pickle.pkl'
 with open(pickle_path, "wb") as f:
-        pickle.dump(rsa_dict, f)
-
+    pickle.dump(rsa_dict, f)
 print(f"All data saved to {pickle_path}")
 
+# ---- Excluded subs Excel (one per condition) ----
+excluded_dfs = excluded_subs_data(excluded_subs, excluded_unmatched_subs, data_dict)
 
-output_path_original = parent_dir / excluded_sub_name
-
-with pd.ExcelWriter(output_path_original, engine="openpyxl") as writer:
-    final_excluded_df_toys_infant.to_excel(writer, sheet_name="Infant_9m_Toys", index=True)
-    final_excluded_df_toys_mom.to_excel(writer, sheet_name="Mom_9m_Toys", index=True)
-    final_excluded_df_notoys_infant.to_excel(writer, sheet_name="Infant_9m_NoToys", index=True)
-    final_excluded_df_notoys_mom.to_excel(writer, sheet_name="Mom_9m_NoToys", index=True)
-
-
+for condition in ['chair', 'hammer']:
+    output_path = parent_dir / f'excluded_subs_{condition}.xlsx'
+    with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
+        for task in ['distress', 'freeplay', 'reunion']:
+            for participant in ['infant', 'mom']:
+                sheet_name = f"{task}_{participant}"
+                excluded_dfs[participant][condition][task].to_excel(writer, sheet_name=sheet_name, index=True)
+    print(f"Saved {output_path}")

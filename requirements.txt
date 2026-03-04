@@ -1,6 +1,6 @@
-numpy
 pandas
-matplotlib
-ipykernel
+numpy
+pathlib
 neurokit2
-../SYNC/dist/sync-0.2.1-py3-none-any.whl
+openpyxl
+sync_path/dist/sync-0.2.1-py3-none-any.whl

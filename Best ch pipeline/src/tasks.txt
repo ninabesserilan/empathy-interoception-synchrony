@@ -1,5 +1,0 @@
-1. check and change chanel seslction pipleine - Done 
-2. Add the sdr perference for invalid chs - Done
-2. Add to the refine best channel tracking of the exclusion subjects - id + reason fpr exclusion - Done
-3. check  refine channel pipeline - Done
-Finished
