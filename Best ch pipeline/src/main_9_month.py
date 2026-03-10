@@ -2,7 +2,7 @@ from pathlib import Path
 import pandas as pd
 import pickle
 
-from data_loader import data_9, data_18
+from data_loader import data_9
 from channel_selection import run_channel_selection
 from finalyzing import create_final_data_dict
 
@@ -10,53 +10,66 @@ from finalyzing import create_final_data_dict
 
 # ---- best ibis channels selection  - df and dict with the statistics of the best, medium and worst channel for each subject in each group and condition---------------------------
 
-# 18 months
+# 9 months
 
 #  infant
 
-# Chair condition — all tasks 
-results_18_chair_infant = run_channel_selection(
-    data_18, age='18', participant='infant', condition='chair', short_channel_pct=0.75
+# Chair condition 
+results_9_chair_infant = run_channel_selection(
+    data_9, age='9_csv', participant='infant', condition='chair', short_channel_pct=0.75
 )
 
-# Hammer condition — all tasks 
-results_18_hammer_infant = run_channel_selection(
-    data_18, age='18', participant='infant', condition='hammer', short_channel_pct=0.75
+# Hammer condition 
+results_9_hammer_infant = run_channel_selection(
+    data_9, age='9_csv', participant='infant', condition='hammer', short_channel_pct=0.75
 )
 
-# # mom
-
-# # Chair condition — all tasks 
-results_18_chair_mom = run_channel_selection(
-    data_18, age='18', participant='mom', condition='chair', short_channel_pct=0.75
-)
-
-# # Hammer condition — all tasks 
-results_18_hammer_mom = run_channel_selection(
-    data_18, age='18', participant='mom', condition='hammer', short_channel_pct=0.75
+# Neutral condition 
+results_9_neutral_infant = run_channel_selection(
+    data_9, age='9_csv', participant='infant', condition='neutral', short_channel_pct=0.75
 )
 
 
-# # # ---- Insert missing peaks for best ibis channels and creat final dict with original and improved data---------------------------
+
+# mom
+
+# Chair condition 
+results_9_chair_mom = run_channel_selection(
+    data_9, age='9_csv', participant='mom', condition='chair', short_channel_pct=0.75
+)
+
+# Hammer condition 
+results_9_hammer_mom = run_channel_selection(
+    data_9, age='9_csv', participant='mom', condition='hammer', short_channel_pct=0.75
+)
+
+
+# Neutral condition 
+results_9_neutral_mom = run_channel_selection(
+    data_9, age='9_csv', participant='mom', condition='neutral', short_channel_pct=0.75
+)
+
+
+# # # # ---- Insert missing peaks for best ibis channels and creat final dict with original and improved data---------------------------
 
 
 # chair_infant_final_dict = create_final_data_dict(
-#     'infant',data_18['infant']['chair'],
+#     'infant',data_9['infant']['chair'],
 #     results_18_chair_infant,
 #     infant_ibis_th=600, mom_ibis_th=1000, median_ibis_percantage_th=1.00
 # )
 # hammer_infant_final_dict = create_final_data_dict(
-#     'infant', data_18['infant']['hammer'],
+#     'infant', data_9['infant']['hammer'],
 #     results_18_hammer_infant,
 #     infant_ibis_th=600, mom_ibis_th=1000, median_ibis_percantage_th=1.00
 # )
 # chair_mom_final_dict = create_final_data_dict(
-#     'mom', data_18['mom']['chair'],
+#     'mom', data_9['mom']['chair'],
 #     results_18_chair_mom,
 #     infant_ibis_th=600, mom_ibis_th=1000, median_ibis_percantage_th=1.00
 # )
 # hammer_mom_final_dict = create_final_data_dict(
-#     'mom', data_18['mom']['hammer'],
+#     'mom', data_9['mom']['hammer'],
 #     results_18_hammer_mom,
 #     infant_ibis_th=600, mom_ibis_th=1000, median_ibis_percantage_th=1.00
 # )

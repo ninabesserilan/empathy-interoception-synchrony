@@ -114,6 +114,7 @@ def rank_channels(metrics_per_ch:dict, invalid_channels:list, valid_channels:lis
         
         i = j
         # Assign ordinal ranks: 1, 2, 3, ...
+    print(final_order)
     best_ch = final_order[0]
     total_ranks = {ch: i + 1 for i, ch in enumerate(final_order)}
 
