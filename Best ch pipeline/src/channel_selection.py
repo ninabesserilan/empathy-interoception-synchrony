@@ -3,20 +3,42 @@ from ranking import rank_channels
 from typing import Literal
 import numpy as np
 import pandas as pd
-# from validation import compute_channel_consistency
 
 
+def _validate_ibi_channel(subj_id, ch_key, ibis, peaks_raw, exclude_subs):
+    """Validate IBIs: check for negatives and verify against peak differences."""
+    neg_mask = ibis < 0
+    if neg_mask.any():
+        reason = f"negative IBI values in {ch_key}"
+        print(f"  WARNING: Subject '{subj_id}', channel '{ch_key}' — "
+              f"{neg_mask.sum()} negative IBI value(s) found: {ibis[neg_mask]}")
+        exclude_subs.setdefault(subj_id, []).append(reason)
 
-import numpy as np
-import pandas as pd
-from typing import Literal
-
+    if peaks_raw is not None:
+        computed = np.diff(np.array(peaks_raw, dtype=int))
+        if len(computed) != len(ibis):
+            reason = f"length mismatch ibi vs peaks in {ch_key}"
+            print(f"  WARNING: Subject '{subj_id}', channel '{ch_key}' — "
+                  f"length mismatch: np.diff(peaks)={len(computed)}, ibi={len(ibis)}")
+            exclude_subs.setdefault(subj_id, []).append(reason)
+        elif not np.allclose(computed, ibis, atol=1):
+            diff = np.abs(computed - ibis)
+            reason = f"ibi != np.diff(peaks) in {ch_key}"
+            print(f"  WARNING: Subject '{subj_id}', channel '{ch_key}' — "
+                  f"ibi != np.diff(peaks), max diff={diff.max():.2f}")
+            exclude_subs.setdefault(subj_id, []).append(reason)
+    else:
+        reason = f"no peaks found for {ch_key}"
+        print(f"  WARNING: Subject '{subj_id}', channel '{ch_key}' — "
+              f"no peaks found to verify ibi")
+        exclude_subs.setdefault(subj_id, []).append(reason)    
+    return exclude_subs
 
 def extract_ibis_channels(data: dict,
                            age: Literal['9', '18'],
                            participant: Literal['mom', 'infant'],
                            condition: Literal['chair', 'hammer', 'neutral'],
-                           task: Literal['freeplay', 'distress', 'reunion'] = None) -> dict:
+                           task: Literal['freeplay', 'distress', 'reunion'] = None) -> tuple[dict, dict]:
     """
     Extract IBI channels into the format expected by channel_selection:
         { subj_id: { participant: { ch_key: { 'data': np.ndarray } } } }
@@ -25,6 +47,7 @@ def extract_ibis_channels(data: dict,
     Age 9:  data[participant][condition][subj_id][ch_key]['ibi']['samples']  → list
     
     Note: 'neutral' condition is only available for age 9.
+    Returns: (data_dict, exclude_subs)
     """
     if age == '18' and condition == 'neutral':
         raise ValueError("Condition 'neutral' is only available for age 9.")
@@ -39,6 +62,7 @@ def extract_ibis_channels(data: dict,
         raise ValueError(f"age must be '9' or '18', got '{age}'.")
 
     data_dict = {}
+    exclude_subs = {}
 
     for subj_id, subj_data in subj_level.items():
         ch_dict = {}
@@ -47,28 +71,24 @@ def extract_ibis_channels(data: dict,
             if not ch_key.startswith('ch'):
                 continue
 
-            if age == '18':
-                raw = ch_data.get('ibi', None)
-            else:  # age 9
-                raw = ch_data.get('ibi', {}).get('samples', None)
+            raw = ch_data.get('ibi', None)
 
             if raw is None:
+                reason = f"IBI data missing in {ch_key}"
                 print(f" WARNING: Subject '{subj_id}', channel '{ch_key}' — "
-                      f"IBI data missing, skipping channel.")
+                    f"IBI data missing, skipping channel.")
+                exclude_subs.setdefault(subj_id, []).append(reason)
                 continue
 
             ibis = np.atleast_1d(np.array(raw, dtype=int))
+            peaks_raw = ch_data.get('peaks', None)
 
-            neg_mask = ibis < 0
-            if neg_mask.any():
-                print(f"  WARNING: Subject '{subj_id}', channel '{ch_key}' — "
-                      f"{neg_mask.sum()} negative IBI value(s) found: {ibis[neg_mask]}")
-
+            _validate_ibi_channel(subj_id, ch_key, ibis, peaks_raw, exclude_subs)
             ch_dict[ch_key] = {'data': ibis}
 
         data_dict[subj_id] = {participant: ch_dict}
 
-    return data_dict
+    return data_dict, exclude_subs
 
 
 def select_best_channel(ibis_channels, participant: Literal['mom', 'infant'],
@@ -165,12 +185,14 @@ def channel_selection(data_dict: dict, participant: Literal['mom', 'infant'],
                     "mean_best", "mean_medium", "mean_worst",
                     "median_best", "median_medium", "median_worst"]
 
-    extra_cols = [c for c in df.columns if c not in column_order]
-    df = df[column_order + extra_cols]
-    int_cols = [c for c in df.columns if c.startswith('length_') or c.startswith('long_ibi_count_')]
-    df[int_cols] = df[int_cols].astype('Int64')  # capital I — handles NaN/None without float casting
-    df.set_index('subject_id', inplace=True)
+    df = df.reindex(columns=column_order)
 
+    int_cols = [c for c in df.columns if c.startswith('length_') or c.startswith('long_ibi_count_')]
+    df[int_cols] = df[int_cols].astype('Int64')  # keeps NA support
+    
+    df = df.sort_values("subject_id")
+    df.set_index('subject_id', inplace=True)    
+    
     return df, data_dic
 
 
@@ -186,37 +208,39 @@ def run_channel_selection(data: dict,
     """
     Main entry point for channel selection across both age groups.
 
-    Age 9:  no task level → returns (df, data_dic)
-    Age 18: has task level → returns { task: (df, data_dic), ... }
-
-    Note: 'neutral' condition is only available for age 9.
+    Age 9:  no task level → returns { condition: {'df': df, 'dict': data_dic, 'excluded_subs': exclude_subs} }
+    Age 18: has task level → returns { task: {'df': df, 'dict': data_dic, 'excluded_subs': exclude_subs}, ... }    Note: 'neutral' condition is only available for age 9.
     """
+    
     if age == '18' and condition == 'neutral':
         raise ValueError("Condition 'neutral' is only available for age 9.")
 
-    if age == '9':
-        data_dict = extract_ibis_channels(data, age, participant, condition)
-        return channel_selection(
-            data_dict, participant, age, short_channel_pct,
-            weights, infant_ibis_th, mom_ibis_th
-        )
+    results = {}
 
-    elif age == '18':
+    if age == '18':
         if tasks is None:
-            tasks: list[Literal['freeplay', 'distress', 'reunion']] = ['freeplay', 'distress', 'reunion']
+            tasks= ['freeplay', 'distress', 'reunion'] 
             print(f"No tasks specified, defaulting to all tasks: {tasks}")
 
-        results = {}
         for task in tasks:
             print(f"\n--- Processing task: '{task}' ---")
-            data_dict = extract_ibis_channels(data, age, participant, condition, task=task)
+            data_dict, exclude_subs = extract_ibis_channels(data, age, participant, condition, task=task)
             df, data_dic = channel_selection(
                 data_dict, participant, age, short_channel_pct,
                 weights, infant_ibis_th, mom_ibis_th
             )
-            results[task] = {'df': df, 'dict': data_dic}
+            results[task] = {'df': df, 'dict': data_dic, 'excluded_subs': exclude_subs}
 
-        return results
-
+    
     else:
-        raise ValueError(f"age must be '9' or '18', got '{age}'.")
+        data_dict, exclude_subs = extract_ibis_channels(data, age, participant, condition)
+        df, data_dic = channel_selection(
+            data_dict, participant, age, short_channel_pct,
+            weights, infant_ibis_th, mom_ibis_th
+        )
+        results[condition] = {'df': df, 'dict': data_dic, 'excluded_subs': exclude_subs}
+    
+    return results
+
+
+

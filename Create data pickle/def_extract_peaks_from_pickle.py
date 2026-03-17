@@ -38,7 +38,7 @@ def filter_and_save_pickle(config):
 
                     # Create ibi if missing
                     if 'ibi' in value:
-                        filtered['ibi'] = copy.deepcopy(value['ibi'])
+                        filtered['ibi'] = copy.deepcopy(value['ibi']['samples'])
                     else:
                         peaks = np.asarray(value['peaks'])
                         if len(peaks) > 1:

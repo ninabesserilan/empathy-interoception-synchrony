@@ -8,17 +8,23 @@ from typing import Literal
 # -----------------------------
 
 def analyze_missing_peaks(participant: Literal['infant', 'mom'], peaks_data_dict, ibis_sub_data, ch_selection_dict: dict, 
-                          median_ibis_percantage_th:float, refined_best_ch:bool =True):
+                          median_ibis_percantage_th:float, exclude_subs: dict = None, refined_best_ch:bool =True):
     """
     Analyze missing peaks in the best IBI channel per subject compared to other channels.
 
     Returns:
     - report: dict keyed by subject, with missing peak info per subject
     """
-    exclude_subs = {}
+    if exclude_subs is None:
+        exclude_subs = {}
+    
     report = {}
     
     for subj_id, sub_data in ibis_sub_data.items():
+        if subj_id in exclude_subs:  # <-- skip already-excluded subs
+            print(f"Skipping {subj_id} — already excluded: {exclude_subs[subj_id]}")
+            continue
+
         sub_peak_data = (peaks_data_dict[subj_id]).get(participant, {})
         sub_ibi_data = (ibis_sub_data[subj_id]).get(participant, {})
 
