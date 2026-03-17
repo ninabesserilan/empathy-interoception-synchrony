@@ -1,7 +1,7 @@
 import numpy as np
-import numpy as np
+from typing import Literal
 
-def prepare_sample_for_analysis(data: dict, min_session_length_sec, min_sdrr, is_interpolation: bool, missing_ibis_prop=0.20 
+def prepare_sample_for_analysis(data: dict,  age: Literal['9', '18'],min_session_length_sec, min_sdrr, is_interpolation: bool, missing_ibis_prop=0.20 
 ):
 
     sample_for_calculation = {}
@@ -12,11 +12,16 @@ def prepare_sample_for_analysis(data: dict, min_session_length_sec, min_sdrr, is
         sample_for_calculation[participant] = {}
         excluded_summary[participant] = {}
 
-        for condition, condition_dict in participant_dict.items():
+        for condition, cond_data in participant_dict.items():
             sample_for_calculation[participant][condition] = {}
             excluded_summary[participant][condition] = {}
 
-            for task, part_data in condition_dict.items():
+            if age == '18':
+                slices = cond_data.items()
+            else:
+                slices = [(condition, cond_data[condition])]
+
+            for slice_key, part_data in slices:
 
                 if is_interpolation:
                     subs_stat = part_data['ibis_after_interpolation']['stats']
@@ -46,10 +51,10 @@ def prepare_sample_for_analysis(data: dict, min_session_length_sec, min_sdrr, is
                 }
 
                 # Store valid data for further analysis
-                sample_for_calculation[participant][condition][task] = valid_subs_data
+                sample_for_calculation[participant][condition][slice_key] = valid_subs_data
 
                 # Keep track of excluded ones
-                excluded_summary[participant][condition][task] = excluded_subs
+                excluded_summary[participant][condition][slice_key] = excluded_subs
 
     return sample_for_calculation, excluded_summary
 

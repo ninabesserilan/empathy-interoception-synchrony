@@ -5,7 +5,7 @@ import pandas as pd
 import neurokit2 as nk
 import numpy as np
 from pathlib import Path
-import pickle
+from typing import Literal
 
 def validate_array(arr: List[pd.Series]):
     for val in arr:
@@ -30,37 +30,42 @@ def clean_array(arr: List[pd.Series], sub_id, participant, ibi_value_th):
     return list(filter(lambda n: n < ibi_value_th, arr))
 
 
-def calculate_rsa(valid_sample: dict, ibi_value_th: int, require_partner=True):
+def calculate_rsa(valid_sample: dict, age: Literal['9', '18'], ibi_value_th: int, require_partner=True):
     excluded_summary = {}
 
     if require_partner:
-        sample_to_analysis, excluded_summary = exclude_unmatched_pairs(valid_sample)
+        sample_to_analysis, excluded_summary = exclude_unmatched_pairs(valid_sample, age)
     else:
         sample_to_analysis = valid_sample
 
     rsa_dict = {}
 
-
     for condition, cond_data in sample_to_analysis.items():
-        for task, task_data in cond_data.items():
-            for participant, sub_dict in task_data.items():
+
+        if age == '18':
+            slices = cond_data.items()
+        else:
+            slices = [(condition, cond_data[condition])]
+
+        for slice_key, slice_data in slices:
+            for participant, sub_dict in slice_data.items():
                 if condition not in rsa_dict:
                     rsa_dict[condition] = {}
-                if task not in rsa_dict[condition]:
-                    rsa_dict[condition][task] = {}
+                if slice_key not in rsa_dict[condition]:
+                    rsa_dict[condition][slice_key] = {}
 
                 for sub_id, ts in sub_dict.items():
-                    if sub_id not in rsa_dict[condition][task]:
-                        rsa_dict[condition][task][sub_id] = {}
+                    if sub_id not in rsa_dict[condition][slice_key]:
+                        rsa_dict[condition][slice_key][sub_id] = {}
 
                     age_type = 'infant' if participant == 'infant' else 'adult'
 
                     if ts is None:
-                        rsa_dict[condition][task][sub_id][participant] = {}
+                        rsa_dict[condition][slice_key][sub_id][participant] = {}
                     else:
                         ibi_ts = list(pd.Series(ts))
                         validate_array(ibi_ts)
-                        rsa_dict[condition][task][sub_id][participant] = rsa_time_series(
+                        rsa_dict[condition][slice_key][sub_id][participant] = rsa_time_series(
                             ibi_ms=ibi_ts,
                             rsa_method='abbney',
                             age_type=age_type
@@ -69,35 +74,41 @@ def calculate_rsa(valid_sample: dict, ibi_value_th: int, require_partner=True):
     return rsa_dict, excluded_summary
 
 
-def exclude_unmatched_pairs(valid_sample: dict):
+def exclude_unmatched_pairs(valid_sample: dict, age: Literal['9', '18']):
     sample_to_analysis = {}
     excluded_summary = {}
 
     for participant, part_data in valid_sample.items():
         for condition, cond_data in part_data.items():
-            for task, sub_dict in cond_data.items():
+
+            if age == '18':
+                slices = cond_data.items()
+            else:
+                slices = [(condition, cond_data[condition])]
+
+            for slice_key, sub_dict in slices:
                 if condition not in sample_to_analysis:
                     sample_to_analysis[condition] = {}
                     excluded_summary[condition] = {}
-                if task not in sample_to_analysis[condition]:
-                    sample_to_analysis[condition][task] = {}
-                    excluded_summary[condition][task] = {}
+                if slice_key not in sample_to_analysis[condition]:
+                    sample_to_analysis[condition][slice_key] = {}
+                    excluded_summary[condition][slice_key] = {}
 
-                sample_to_analysis[condition][task][participant] = sub_dict
+                sample_to_analysis[condition][slice_key][participant] = sub_dict
 
-    # Now find unmatched pairs per condition/task
+    # Find unmatched pairs per condition/slice
     for condition, cond_data in sample_to_analysis.items():
-        for task, task_data in cond_data.items():
-            participants = list(task_data.keys())
-            subj_sets = {p: set(task_data[p].keys()) for p in participants}
-            common_subs = set.intersection(*subj_sets.values())
-            all_subs = set.union(*subj_sets.values())
+        for slice_key, slice_data in cond_data.items():
+            participants = list(slice_data.keys())
+            subj_sets    = {p: set(slice_data[p].keys()) for p in participants}
+            common_subs  = set.intersection(*subj_sets.values())
+            all_subs     = set.union(*subj_sets.values())
             unmatched_subs = all_subs - common_subs
 
             if unmatched_subs:
-                excluded_summary[condition][task]['unmatched_subjects'] = list(unmatched_subs)
+                excluded_summary[condition][slice_key]['unmatched_subjects'] = list(unmatched_subs)
                 for p in participants:
                     for sub in unmatched_subs:
-                        task_data[p].pop(sub, None)
+                        slice_data[p].pop(sub, None)
 
     return sample_to_analysis, excluded_summary
