@@ -21,8 +21,8 @@ interpolation_pickle_output_9m = parent_dir / 'after interpolation_9m.pkl'
 interpolation_pickle_output_18m = parent_dir / 'after interpolation_18m.pkl'
 
 data_dict_9m = data_loader(dic_for_interpolation_9m)
-data_dict_18m = data_loader(dic_for_interpolation_18m)
+# data_dict_18m = data_loader(dic_for_interpolation_18m)
 
 intrpolat_ibi_9m= interpolation_process(data_dict_9m, '9',500, js_spline_lookup, infant_ibis_th=600, mom_ibis_th=1000, tension=0.2, save_path= interpolation_pickle_output_9m)
-intrpolat_ibi_18m= interpolation_process(data_dict_18m, '18', 500, js_spline_lookup, infant_ibis_th=600, mom_ibis_th=1000, tension=0.2, save_path= interpolation_pickle_output_18m)
+# intrpolat_ibi_18m= interpolation_process(data_dict_18m, '18', 500, js_spline_lookup, infant_ibis_th=600, mom_ibis_th=1000, tension=0.2, save_path= interpolation_pickle_output_18m)
 

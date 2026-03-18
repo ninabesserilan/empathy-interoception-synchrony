@@ -8,6 +8,6 @@ import pickle
 
 
 empathy_9_month_pickle = filter_and_save_pickle(Config_03_json_empathy_9)
-empathy_18_month_pickle = filter_and_save_pickle(Config_03_json_empathy_18)
+# empathy_18_month_pickle = filter_and_save_pickle(Config_03_json_empathy_18)
 
 
