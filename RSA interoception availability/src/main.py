@@ -2,7 +2,7 @@ from pathlib import Path
 import pandas as pd
 from data_loader import data_loader
 
-pickle_rsa = Path('/Users/nina/Desktop/University of Vienna/PhD projects/python code/empathy-interoception-synchrony/RSA analysis/rsa_pickle.pkl')
+pickle_rsa = Path('/Users/nina/Desktop/University of Vienna/PhD projects/python code/empathy-interoception-synchrony/RSA analysis/rsa_pickle_18m.pkl')
 
 
 rsa_dict = data_loader(pickle_rsa)

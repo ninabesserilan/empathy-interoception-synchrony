@@ -102,6 +102,15 @@ def select_best_channel(ibis_channels, participant: Literal['mom', 'infant'],
     max_len = max(n_ibis.values()) if n_ibis else 0
     valid_flags = {ch: (n_ibis[ch] >= short_channel_pct * max_len) for ch in n_ibis}
 
+    invalid_test =  {ch: (n_ibis[ch] < short_channel_pct * max_len) for ch in n_ibis}
+    # print('short = 0.80')
+    # print(invalid_test)
+    test = {ch: (n_ibis[ch] < 0.75 * max_len) for ch in n_ibis}
+    # print('shot=0.75')
+    # print(test)
+    print(invalid_test==test)
+
+
     metrics_per_ch = {}
     for ch in ibis_channels:
         metrics = compute_metrics(ibis_channels[ch], participant, infant_ibis_th, mom_ibis_th)

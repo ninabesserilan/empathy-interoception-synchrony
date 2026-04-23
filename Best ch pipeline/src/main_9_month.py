@@ -16,34 +16,34 @@ from finalyzing import create_final_data_dict
 
 # Chair condition 
 results_9_chair_infant = run_channel_selection(
-    data_9, age='9', participant='infant', condition='chair', short_channel_pct=0.75
+    data_9, age='9', participant='infant', condition='chair', short_channel_pct=0.80
 )
 
 # Hammer condition —
 results_9_hammer_infant = run_channel_selection(
-    data_9, age='9', participant='infant', condition='hammer', short_channel_pct=0.75
+    data_9, age='9', participant='infant', condition='hammer', short_channel_pct=0.80
 )
 
 
 results_9_neutral_infant = run_channel_selection(
-    data_9, age='9', participant='infant', condition='neutral', short_channel_pct=0.75
+    data_9, age='9', participant='infant', condition='neutral', short_channel_pct=0.80
 )
 
 # mom
 
 # Chair condition 
 results_9_chair_mom = run_channel_selection(
-    data_9, age='9', participant='mom', condition='chair', short_channel_pct=0.75
+    data_9, age='9', participant='mom', condition='chair', short_channel_pct=0.80
 )
 
 # Hammer condition —
 results_9_hammer_mom = run_channel_selection(
-    data_9, age='9', participant='mom', condition='hammer', short_channel_pct=0.75
+    data_9, age='9', participant='mom', condition='hammer', short_channel_pct=0.80
 )
 
 
 results_9_neutral_mom = run_channel_selection(
-    data_9, age='9', participant='mom', condition='neutral', short_channel_pct=0.75
+    data_9, age='9', participant='mom', condition='neutral', short_channel_pct=0.80
 )
 
 # # # ---- Insert missing peaks for best ibis channels and creat final dict with original and improved data---------------------------
